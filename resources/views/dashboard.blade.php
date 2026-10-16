@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyFlow - Student Task Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+    </style>
+</head>
+<body class="bg-[#F8FAFC] text-slate-800 antialiased flex h-screen overflow-hidden text-sm">
+
+    <!-- 1. LEFT SIDEBAR -->
+    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between flex-shrink-0 z-20">
+        <div class="p-5 space-y-6">
+            <!-- App Logo -->
+            <div class="flex items-center space-x-2.5">
+                <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-base shadow-sm">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <span class="text-lg font-bold text-slate-900 tracking-tight">StudyFlow</span>
+            </div>
+
+            <!-- Main Navigation -->
+            <nav class="space-y-1">
+                <a href="{{ route('dashboard') }}" class="flex items-center justify-between px-3 py-2 text-sm font-semibold text-indigo-600 bg-indigo-50/80 rounded-xl">
+                    <div class="flex items-center space-x-3">
+                        <i class="fa-regular fa-rectangle-list w-4 text-center"></i>
+                        <span>My tasks</span>
+                    </div>
+                    <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-2 py-0.5 rounded-full">{{ $todoTasks->count() + $inProgressTasks->count() }}</span>
+                </a>
+                <a href="{{ route('calendar.index') }}" class="flex items-center space-x-3 px-3 py-2 font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl transition">
+                    <i class="fa-regular fa-calendar w-4 text-center"></i>
+                    <span>Calendar</span>
+                </a>
+                <a href="{{ route('courses.index') }}" class="flex items-center space-x-3 px-3 py-2 font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl transition">
+                    <i class="fa-solid fa-book-open w-4 text-center"></i>
+                    <span>Courses</span>
+                </a>
+                <a href="{{ route('focus.index') }}" class="flex items-center space-x-3 px-3 py-2 font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl transition">
+                    <i class="fa-regular fa-clock w-4 text-center"></i>
+                    <span>Focus</span>
+                </a>
+            </nav>
+
+            <!-- Workspace Section -->
+            <div class="pt-2">
+                <div class="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-400 px-3 mb-2">
+                    <span>Workspace</span>
+                    <button class="hover:text-slate-600"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                </div>
+                <div class="space-y-1">
+                    <a href="#" class="flex items-center space-x-3 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 rounded-lg">
+                        <i class="fa-regular fa-folder w-4 text-center text-slate-400"></i>
+                        <span>Spring semester</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 rounded-lg">
+                        <i class="fa-solid fa-user-group w-4 text-center text-slate-400"></i>
+                        <span>Study group</span>
+                    </a>
+                    <a href="#" class="flex items-center space-x-3 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 rounded-lg">
+                        <i class="fa-solid fa-box-archive w-4 text-center text-slate-400"></i>
+                        <span>Resources</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Footer -->
+        <div class="p-4 border-t border-slate-100 space-y-4">
+            <!-- Semester Progress -->
+            <div class="space-y-1.5 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <div class="flex justify-between items-center text-xs font-semibold">
+                    <span class="text-slate-700">Semester progress</span>
+                    <span class="text-indigo-600">68%</span>
+                </div>
+                <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                    <div class="bg-indigo-600 h-1.5 rounded-full" style="width: 68%"></div>
+                </div>
+                <p class="text-[11px] text-slate-400">9 of 13 weeks complete · keep going!</p>
+            </div>
+
+            <!-- User Profile & Logout Breeze -->
+            <div class="flex items-center justify-between px-1">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-xs">
+                        {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 2)) }}
+                    </div>
+                    <div class="leading-tight overflow-hidden">
+                        <p class="font-semibold text-xs text-slate-900 truncate max-w-[110px]">{{ Auth::user()->name ?? 'Student' }}</p>
+                        <p class="text-[11px] text-slate-400">Student Account</p>
+                    </div>
+                </div>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" title="Logout" class="text-slate-400 hover:text-rose-600 p-1.5 transition">
+                        <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 2. CENTER CONTENT (Kanban Board & Header) -->
+    <main class="flex-1 flex flex-col min-w-0 bg-white">
+        <!-- Top Navbar Header -->
+        <header class="h-16 border-b border-slate-200 px-8 flex items-center justify-between flex-shrink-0">
+            <div>
+                <h1 class="text-base font-bold text-slate-900">Good day, {{ strtok(Auth::user()->name ?? 'Student', ' ') }}</h1>
+                <p class="text-xs text-slate-400">{{ now()->format('l, F j') }} · {{ $todoTasks->count() + $inProgressTasks->count() }} active tasks</p>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <!-- Search Bar -->
+                <div class="relative w-72">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i>
+                    <input type="text" placeholder="Search tasks, courses, notes..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-10 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-indigo-400">
+                    <span class="absolute right-2.5 top-2 text-[10px] text-slate-400 font-semibold bg-slate-200/60 px-1.5 py-0.5 rounded">⌘K</span>
+                </div>
+                <button class="w-8 h-8 rounded-xl border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition">
+                    <i class="fa-regular fa-bell text-xs"></i>
+                </button>
+                <button onclick="document.getElementById('taskModal').classList.remove('hidden')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-3.5 py-2 rounded-xl flex items-center space-x-1.5 shadow-sm transition">
+                    <i class="fa-solid fa-plus text-[10px]"></i>
+                    <span>New task</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Body -->
+        <div class="flex-1 overflow-y-auto p-8 space-y-6">
+            <!-- Header Row & Metric Badges -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-sm font-bold text-slate-900">My tasks</h2>
+                    <p class="text-xs text-slate-400">On track across all registered courses</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-2 bg-amber-50 border border-amber-200/60 px-3 py-1.5 rounded-xl text-xs text-amber-800 font-medium">
+                        <i class="fa-solid fa-fire text-amber-500"></i>
+                        <span>7 day focus streak</span>
+                    </div>
+                    <div class="flex items-center space-x-2 bg-emerald-50 border border-emerald-200/60 px-3 py-1.5 rounded-xl text-xs text-emerald-800 font-medium">
+                        <i class="fa-solid fa-circle-check text-emerald-500"></i>
+                        <span>{{ $doneTasks->count() }} completed</span>
+                    </div>
+                    <div class="flex items-center space-x-2 bg-indigo-50 border border-indigo-200/60 px-3 py-1.5 rounded-xl text-xs text-indigo-800 font-medium">
+                        <i class="fa-regular fa-clock text-indigo-500"></i>
+                        <span>6.5h focused study time</span>
+                    </div>
+                    <div class="flex items-center border border-slate-200 rounded-xl p-0.5 bg-slate-50">
+                        <button class="p-1.5 rounded-lg text-slate-600 hover:text-slate-900"><i class="fa-solid fa-sliders text-xs"></i></button>
+                        <button class="p-1.5 rounded-lg bg-white shadow-xs text-indigo-600"><i class="fa-solid fa-table-columns text-xs"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kanban Columns Container -->
+            <div class="grid grid-cols-3 gap-5">
+                <!-- Column 1: To Do -->
+                <div class="bg-slate-50/80 rounded-2xl p-4 border border-slate-100 flex flex-col min-h-[500px]">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                            <span class="font-bold text-xs text-slate-700">To Do</span>
+                            <span class="text-xs text-slate-400 font-semibold">{{ $todoTasks->count() }}</span>
+                        </div>
+                        <button class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-ellipsis"></i></button>
+                    </div>
+
+                    <div class="space-y-3 flex-1">
+                        @forelse($todoTasks as $task)
+                        <div class="bg-white rounded-xl p-4 border border-slate-200/80 shadow-xs hover:shadow-sm transition space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-md" style="background-color: {{ $task->course->color_hex ?? '#4F46E5' }}15; color: {{ $task->course->color_hex ?? '#4F46E5' }}">
+                                    {{ $task->course->course_code ?? 'Course' }}
+                                </span>
+                                <!-- Priority Badge -->
+                                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full 
+                                    @if($task->priority === 'high') bg-rose-50 text-rose-600 border border-rose-200/60
+                                    @elseif($task->priority === 'low') bg-emerald-50 text-emerald-600 border border-emerald-200/60
+                                    @else bg-amber-50 text-amber-600 border border-amber-200/60 @endif">
+                                    {{ ucfirst($task->priority ?? 'medium') }}
+                                </span>
+                            </div>
+                            <h4 class="font-bold text-xs text-slate-900 leading-snug">{{ $task->title }}</h4>
+                            <p class="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">{{ $task->description }}</p>
+                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                                <span class="text-rose-500 font-medium flex items-center space-x-1">
+                                    <i class="fa-regular fa-calendar-check text-[10px]"></i>
+                                    <span>{{ is_string($task->due_date) ? $task->due_date : $task->due_date?->format('M j, Y') }}</span>
+                                </span>
+                                <form action="{{ route('tasks.updateStatus', $task->id) }}" method="POST">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="status" value="in_progress">
+                                    <button type="submit" class="text-indigo-600 font-semibold hover:text-indigo-800">Start →</button>
+                                </form>
+                            </div>
+                        </div>
+                        @empty
+                        <div class="p-6 text-center text-xs text-slate-400">No tasks in To Do</div>
+                        @endforelse
+                    </div>
+
+                    <button onclick="document.getElementById('taskModal').classList.remove('hidden')" class="mt-4 w-full py-2 border border-dashed border-slate-300 rounded-xl text-xs font-semibold text-slate-500 hover:bg-white hover:border-slate-400 transition flex items-center justify-center space-x-1.5">
+                        <i class="fa-solid fa-plus text-[10px]"></i>
+                        <span>Add task</span>
+                    </button>
+                </div>
+
+                <!-- Column 2: In Progress -->
+                <div class="bg-slate-50/80 rounded-2xl p-4 border border-slate-100 flex flex-col min-h-[500px]">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                            <span class="font-bold text-xs text-slate-700">In Progress</span>
+                            <span class="text-xs text-slate-400 font-semibold">{{ $inProgressTasks->count() }}</span>
+                        </div>
+                        <button class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-ellipsis"></i></button>
+                    </div>
+
+                    <div class="space-y-3 flex-1">
+                        @forelse($inProgressTasks as $task)
+                        <div class="bg-white rounded-xl p-4 border border-slate-200/80 shadow-xs hover:shadow-sm transition space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-md" style="background-color: {{ $task->course->color_hex ?? '#3B82F6' }}15; color: {{ $task->course->color_hex ?? '#3B82F6' }}">
+                                    {{ $task->course->course_code ?? 'Course' }}
+                                </span>
+                                <!-- Priority Badge -->
+                                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full 
+                                    @if($task->priority === 'high') bg-rose-50 text-rose-600 border border-rose-200/60
+                                    @elseif($task->priority === 'low') bg-emerald-50 text-emerald-600 border border-emerald-200/60
+                                    @else bg-amber-50 text-amber-600 border border-amber-200/60 @endif">
+                                    {{ ucfirst($task->priority ?? 'medium') }}
+                                </span>
+                            </div>
+                            <h4 class="font-bold text-xs text-slate-900 leading-snug">{{ $task->title }}</h4>
+                            <p class="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">{{ $task->description }}</p>
+                            <!-- Progress Bar -->
+                            <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                <div class="bg-blue-500 h-1.5 rounded-full" style="width: 50%"></div>
+                            </div>
+                            <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                                <span class="text-amber-600 font-medium flex items-center space-x-1">
+                                    <i class="fa-regular fa-clock text-[10px]"></i>
+                                    <span>Due {{ is_string($task->due_date) ? $task->due_date : $task->due_date?->format('M j') }}</span>
+                                </span>
+                                <form action="{{ route('tasks.updateStatus', $task->id) }}" method="POST">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="status" value="done">
+                                    <button type="submit" class="text-emerald-600 font-semibold hover:text-emerald-800">Done ✓</button>
+                                </form>
+                            </div>
+                        </div>
+                        @empty
+                        <div class="p-6 text-center text-xs text-slate-400">No active tasks</div>
+                        @endforelse
+                    </div>
+
+                    <button onclick="document.getElementById('taskModal').classList.remove('hidden')" class="mt-4 w-full py-2 border border-dashed border-slate-300 rounded-xl text-xs font-semibold text-slate-500 hover:bg-white hover:border-slate-400 transition flex items-center justify-center space-x-1.5">
+                        <i class="fa-solid fa-plus text-[10px]"></i>
+                        <span>Add task</span>
+                    </button>
+                </div>
+
+                <!-- Column 3: Done -->
+                <div class="bg-slate-50/80 rounded-2xl p-4 border border-slate-100 flex flex-col min-h-[500px]">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span class="font-bold text-xs text-slate-700">Done</span>
+                            <span class="text-xs text-slate-400 font-semibold">{{ $doneTasks->count() }}</span>
+                        </div>
+                        <button class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-ellipsis"></i></button>
+                    </div>
+
+                    <div class="space-y-3 flex-1">
+                        @forelse($doneTasks as $task)
+                        <div class="bg-white/70 rounded-xl p-4 border border-slate-200/60 shadow-xs space-y-2 opacity-85">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-md" style="background-color: {{ $task->course->color_hex ?? '#10B981' }}15; color: {{ $task->course->color_hex ?? '#10B981' }}">
+                                    {{ $task->course->course_code ?? 'Course' }}
+                                </span>
+                                <!-- Priority & Done Status -->
+                                <div class="flex items-center space-x-1.5">
+                                    <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
+                                        {{ ucfirst($task->priority ?? 'medium') }}
+                                    </span>
+                                    <span class="text-emerald-600 text-xs"><i class="fa-solid fa-check"></i></span>
+                                </div>
+                            </div>
+                            <h4 class="font-bold text-xs text-slate-700 line-through leading-snug">{{ $task->title }}</h4>
+                            <p class="text-[11px] text-slate-400 line-clamp-1">{{ $task->description }}</p>
+                            <div class="pt-2 border-t border-slate-100 text-[10px] text-emerald-600 font-medium">
+                                Completed ✓
+                            </div>
+                        </div>
+                        @empty
+                        <div class="p-6 text-center text-xs text-slate-400">No completed tasks yet</div>
+                        @endforelse
+                    </div>
+
+                    <button onclick="document.getElementById('taskModal').classList.remove('hidden')" class="mt-4 w-full py-2 border border-dashed border-slate-300 rounded-xl text-xs font-semibold text-slate-500 hover:bg-white hover:border-slate-400 transition flex items-center justify-center space-x-1.5">
+                        <i class="fa-solid fa-plus text-[10px]"></i>
+                        <span>Add task</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 3. RIGHT SIDEBAR (AI Study Assistant Panel) -->
+    <aside class="w-80 bg-white border-l border-slate-200 flex flex-col justify-between flex-shrink-0 z-20">
+        <!-- Assistant Header -->
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-xs">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-xs text-slate-900">Study assistant</h3>
+                    <p class="text-[10px] text-emerald-600 font-medium flex items-center space-x-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
+                        <span>Online · knows your task board</span>
+                    </p>
+                </div>
+            </div>
+            <button class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-ellipsis"></i></button>
+        </div>
+
+        <!-- AI Chat Messages Scrollable Area -->
+        <div class="p-4 flex-1 overflow-y-auto space-y-4">
+            <!-- Context Banner -->
+            <div class="bg-indigo-50/60 border border-indigo-100 rounded-xl p-2.5 text-[11px] text-indigo-700 flex items-start space-x-2">
+                <i class="fa-solid fa-circle-info text-indigo-500 mt-0.5"></i>
+                <span>Using your deadlines, course load, and focus history.</span>
+            </div>
+
+            <!-- Bot Message 1 -->
+            <div class="flex items-start space-x-2">
+                <div class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">
+                    <i class="fa-solid fa-sparkles"></i>
+                </div>
+                <div class="bg-slate-100 text-slate-800 text-xs p-3 rounded-2xl rounded-tl-sm leading-relaxed">
+                    Good day, {{ strtok(Auth::user()->name ?? 'Student', ' ') }}! You currently have {{ $todoTasks->count() }} tasks in To Do. Focus on one task at a time!
+                    <span class="block text-[10px] text-slate-400 mt-1">Just now</span>
+                </div>
+            </div>
+
+            <!-- User Message -->
+            <div class="flex justify-end">
+                <div class="bg-indigo-600 text-white text-xs p-3 rounded-2xl rounded-tr-sm leading-relaxed max-w-[85%]">
+                    Can you help me plan two focused hours this afternoon?
+                    <span class="block text-[10px] text-indigo-200 mt-1 text-right">9:16 AM</span>
+                </div>
+            </div>
+
+            <!-- Bot Recommendation Card -->
+            <div class="flex items-start space-x-2">
+                <div class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">
+                    <i class="fa-solid fa-sparkles"></i>
+                </div>
+                <div class="bg-slate-100 text-slate-800 text-xs p-3 rounded-2xl rounded-tl-sm leading-relaxed space-y-3 w-full">
+                    <p>Absolutely. Here's a balanced plan with one short reset:</p>
+
+                    <!-- Timebox Cards -->
+                    <div class="space-y-1.5 bg-white p-2.5 rounded-xl border border-slate-200/80">
+                        <div class="flex items-start space-x-2 text-[11px]">
+                            <span class="font-bold text-slate-700 w-8">2:00</span>
+                            <div>
+                                <p class="font-semibold text-slate-800">Draft research question</p>
+                                <span class="text-[10px] text-purple-600 font-medium">Academic · 45 min</span>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-2 text-[11px] pt-1.5 border-t border-slate-100">
+                            <span class="font-bold text-slate-700 w-8">2:55</span>
+                            <div>
+                                <p class="font-semibold text-slate-800">Solve problem sets</p>
+                                <span class="text-[10px] text-blue-600 font-medium">Core Courses · 45 min</span>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-2 text-[11px] pt-1.5 border-t border-slate-100">
+                            <span class="font-bold text-slate-700 w-8">3:40</span>
+                            <div>
+                                <p class="font-semibold text-slate-800">Review & set next step</p>
+                                <span class="text-[10px] text-slate-500">Wrap-up · 20 min</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="{{ route('calendar.index') }}" class="w-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold py-1.5 rounded-lg flex items-center justify-center space-x-1.5 shadow-xs transition">
+                        <i class="fa-regular fa-calendar-plus text-indigo-600"></i>
+                        <span>View Calendar</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assistant Input Box & Quick Chips -->
+        <div class="p-3 border-t border-slate-100 space-y-2">
+            <div class="flex items-center space-x-1.5">
+                <button class="text-[10px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-600 px-2.5 py-1 rounded-full transition">Break down task</button>
+                <a href="{{ route('focus.index') }}" class="text-[10px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-600 px-2.5 py-1 rounded-full transition">Start focus</a>
+            </div>
+            <div class="relative flex items-center">
+                <input type="text" placeholder="Ask about your work..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-14 py-2 text-xs text-slate-700 focus:outline-none focus:border-indigo-400">
+                <div class="absolute right-1.5 flex items-center space-x-1 text-slate-400">
+                    <button class="p-1 hover:text-slate-600"><i class="fa-solid fa-paperclip text-xs"></i></button>
+                    <button class="p-1 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 w-6 h-6 flex items-center justify-center shadow-xs"><i class="fa-solid fa-arrow-up text-[10px]"></i></button>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 4. MODAL ADD NEW TASK -->
+    <div id="taskModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl border border-slate-100">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h3 class="font-bold text-sm text-slate-900">Add new task</h3>
+                    <p class="text-xs text-slate-400">Add a task to your schedule and stay on track.</p>
+                </div>
+                <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">✕</button>
+            </div>
+            <form action="{{ route('tasks.store') }}" method="POST" class="space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Task Title</label>
+                    <input type="text" name="title" required class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-indigo-500" placeholder="e.g. Submit HCI research plan">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Course</label>
+                    <select name="course_id" required class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-indigo-500">
+                        @foreach($courses as $c)
+                            <option value="{{ $c->id }}">{{ $c->course_code }} · {{ $c->course_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Deadline Date</label>
+                        <input type="date" name="due_date" required class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-indigo-500" value="{{ date('Y-m-d') }}">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Priority</label>
+                        <select name="priority" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-indigo-500">
+                            <option value="low">🟢 Low</option>
+                            <option value="medium" selected>🟡 Medium</option>
+                            <option value="high">🔴 High</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Description (Optional)</label>
+                    <textarea name="description" rows="2" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-indigo-500" placeholder="Research methods, interview notes, etc."></textarea>
+                </div>
+                <div class="pt-2 flex justify-end space-x-2">
+                    <button type="button" onclick="document.getElementById('taskModal').classList.add('hidden')" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-xs">Save task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>
