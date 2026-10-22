@@ -39,12 +39,24 @@
                 </a>
             </nav>
         </div>
-        <div class="p-4 border-t border-slate-800 flex items-center space-x-3">
-            <div class="w-8 h-8 rounded-full bg-amber-500/20 text-amber-300 font-bold flex items-center justify-center text-xs">MK</div>
-            <div class="leading-tight">
-                <p class="font-semibold text-xs text-white">Maya Kim</p>
-                <p class="text-[11px] text-slate-400">Deep Work Mode</p>
+
+        <!-- Sidebar Footer Dinamis (Dark Theme) -->
+        <div class="p-4 border-t border-slate-800 flex items-center justify-between px-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-full bg-indigo-500/20 text-indigo-300 font-bold flex items-center justify-center text-xs border border-indigo-500/30">
+                    {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 2)) }}
+                </div>
+                <div class="leading-tight overflow-hidden">
+                    <p class="font-semibold text-xs text-white truncate max-w-[110px]">{{ Auth::user()->name ?? 'Student' }}</p>
+                    <p class="text-[11px] text-slate-400">Deep Work Mode</p>
+                </div>
             </div>
+            <form method="POST" action="{{ route('logout') }}" class="m-0">
+                @csrf
+                <button type="submit" title="Logout" class="text-slate-400 hover:text-rose-400 p-1.5 transition">
+                    <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i>
+                </button>
+            </form>
         </div>
     </aside>
 
@@ -62,7 +74,7 @@
                 <span id="sessionType">Pomodoro Focus Session</span>
             </div>
 
-            <!-- Task Selector -->
+             <!-- Task Selector -->
             <div class="w-full">
                 <label class="block text-[11px] font-semibold text-slate-400 mb-1.5 uppercase tracking-wider text-left">Link to active task</label>
                 <select id="taskSelect" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-indigo-500">
@@ -135,7 +147,7 @@
                 isRunning = false;
                 btn.innerText = "Resume";
                 btn.classList.replace('bg-amber-600', 'bg-indigo-600');
-                btn.classList.replace('hover:bg-amber-500', 'hover:bg-indigo-500');
+                btn.classList.replace('hover:bg-indigo-500', 'hover:bg-amber-500');
                 clearInterval(timerInterval);
             }
         }

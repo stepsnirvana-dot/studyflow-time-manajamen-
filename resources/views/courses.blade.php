@@ -39,12 +39,24 @@
                 </a>
             </nav>
         </div>
-        <div class="p-4 border-t border-slate-100 flex items-center space-x-3">
-            <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-800 font-bold flex items-center justify-center text-xs">MK</div>
-            <div class="leading-tight">
-                <p class="font-semibold text-xs text-slate-900">Maya Kim</p>
-                <p class="text-[11px] text-slate-400">Computer Science · Year 2</p>
+
+        <!-- Sidebar Footer Dinamis -->
+        <div class="p-4 border-t border-slate-100 flex items-center justify-between px-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-xs">
+                    {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 2)) }}
+                </div>
+                <div class="leading-tight overflow-hidden">
+                    <p class="font-semibold text-xs text-slate-900 truncate max-w-[110px]">{{ Auth::user()->name ?? 'Student' }}</p>
+                    <p class="text-[11px] text-slate-400">Student Account</p>
+                </div>
             </div>
+            <form method="POST" action="{{ route('logout') }}" class="m-0">
+                @csrf
+                <button type="submit" title="Logout" class="text-slate-400 hover:text-rose-600 p-1.5 transition">
+                    <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i>
+                </button>
+            </form>
         </div>
     </aside>
 
@@ -53,17 +65,23 @@
         <header class="h-16 border-b border-slate-200 px-8 flex items-center justify-between flex-shrink-0">
             <div>
                 <h1 class="text-base font-bold text-slate-900">Registered Courses</h1>
-                <p class="text-xs text-slate-400">Semester 4 · Total {{ $courses->sum('credits') }} Credits (SKS)</p>
+                <p class="text-xs text-slate-400">Total {{ $courses->sum('credits') }} Credits (SKS) registered</p>
             </div>
-            <a href="{{ route('dashboard') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-3.5 py-2 rounded-xl flex items-center space-x-1.5 shadow-sm transition">
-                <i class="fa-solid fa-arrow-left text-[10px]"></i>
-                <span>Back to Task Board</span>
-            </a>
+            <div class="flex items-center space-x-3">
+                <button onclick="document.getElementById('courseModal').classList.remove('hidden')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-3.5 py-2 rounded-xl flex items-center space-x-1.5 shadow-sm transition">
+                    <i class="fa-solid fa-plus text-[10px]"></i>
+                    <span>Add Course</span>
+                </button>
+                <a href="{{ route('dashboard') }}" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-3.5 py-2 rounded-xl flex items-center space-x-1.5 transition">
+                    <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                    <span>Back to Tasks</span>
+                </a>
+            </div>
         </header>
 
         <div class="p-8 space-y-6">
             <div class="grid grid-cols-2 gap-6">
-                @foreach($courses as $course)
+                @forelse($courses as $course)
                 <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs hover:shadow-md transition space-y-4">
                     <div class="flex items-start justify-between">
                         <div class="flex items-center space-x-3">
@@ -100,9 +118,90 @@
                         <a href="{{ route('dashboard') }}" class="text-indigo-600 font-semibold hover:underline">View tasks →</a>
                     </div>
                 </div>
-                @endforeach
+                @empty
+                <div class="col-span-2 py-16 flex flex-col items-center justify-center text-center bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-8">
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3 text-lg">
+                        <i class="fa-solid fa-book-open"></i>
+                    </div>
+                    <h3 class="font-bold text-sm text-slate-900">Belum ada mata kuliah</h3>
+                    <p class="text-xs text-slate-400 max-w-sm mt-1 mb-4">Daftarkan mata kuliah semester ini untuk mengaktifkan jadwal di Kalender dan menghubungkannya dengan tugas harian.</p>
+                    <button onclick="document.getElementById('courseModal').classList.remove('hidden')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-xs transition">
+                        + Tambah Mata Kuliah Pertama
+                    </button>
+                </div>
+                @endforelse
             </div>
         </div>
     </main>
+
+    <!-- Modal Add Course -->
+    <div id="courseModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl border border-slate-100">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h3 class="font-bold text-sm text-slate-900">Tambah Mata Kuliah</h3>
+                    <p class="text-xs text-slate-400">Masukkan jadwal & detail perkuliahanmu.</p>
+                </div>
+                <button onclick="document.getElementById('courseModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">✕</button>
+            </div>
+            <form action="{{ route('courses.store') }}" method="POST" class="space-y-3.5">
+                @csrf
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Kode MK</label>
+                        <input type="text" name="course_code" placeholder="CS 241" required class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-indigo-500">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Mata Kuliah</label>
+                        <input type="text" name="course_name" placeholder="Data Structures" required class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-indigo-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Hari Kuliah</label>
+                        <select name="day" required class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-indigo-500">
+                            <option value="Monday">Monday (Senin)</option>
+                            <option value="Tuesday">Tuesday (Selasa)</option>
+                            <option value="Wednesday">Wednesday (Rabu)</option>
+                            <option value="Thursday">Thursday (Kamis)</option>
+                            <option value="Friday">Friday (Jumat)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Waktu / Jam</label>
+                        <input type="text" name="time" placeholder="09:00 - 10:30" required class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-indigo-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="col-span-2">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Dosen Pengampu</label>
+                        <input type="text" name="lecturer_name" placeholder="Dr. Sarah Chen" required class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">SKS</label>
+                        <input type="number" name="credits" value="3" min="1" max="6" required class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-indigo-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Ruangan / Lab</label>
+                        <input type="text" name="room" placeholder="Engineering 112" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Warna Label</label>
+                        <input type="color" name="color_hex" value="#4F46E5" class="w-full h-9 border border-slate-200 rounded-xl p-1 cursor-pointer">
+                    </div>
+                </div>
+
+                <div class="pt-2 flex justify-end space-x-2">
+                    <button type="button" onclick="document.getElementById('courseModal').classList.add('hidden')" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Batal</button>
+                    <button type="submit" class="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-xs">Simpan Course</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

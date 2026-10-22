@@ -39,12 +39,24 @@
                 </a>
             </nav>
         </div>
-        <div class="p-4 border-t border-slate-100 flex items-center space-x-3">
-            <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-800 font-bold flex items-center justify-center text-xs">MK</div>
-            <div class="leading-tight">
-                <p class="font-semibold text-xs text-slate-900">Maya Kim</p>
-                <p class="text-[11px] text-slate-400">Weekly Timetable</p>
+
+        <!-- Profil Dinamis -->
+        <div class="p-4 border-t border-slate-100 flex items-center justify-between px-4">
+            <div class="flex items-center space-x-3 min-w-0">
+                <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-xs shrink-0">
+                    {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 2)) }}
+                </div>
+                <div class="leading-tight truncate">
+                    <p class="font-semibold text-xs text-slate-900 truncate">{{ Auth::user()->name ?? 'Student' }}</p>
+                    <p class="text-[11px] text-slate-400">Student Account</p>
+                </div>
             </div>
+            <form method="POST" action="{{ route('logout') }}" class="m-0">
+                @csrf
+                <button type="submit" title="Logout" class="text-slate-400 hover:text-rose-600 p-1.5 transition">
+                    <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i>
+                </button>
+            </form>
         </div>
     </aside>
 
@@ -53,12 +65,17 @@
         <header class="h-16 border-b border-slate-200 px-8 flex items-center justify-between flex-shrink-0">
             <div>
                 <h1 class="text-base font-bold text-slate-900">Academic Schedule & Deadlines</h1>
-                <p class="text-xs text-slate-400">October 2026 · Class schedules mapped with task due dates</p>
+                <p class="text-xs text-slate-400">{{ now()->format('F Y') }} · Class schedules mapped with task due dates</p>
             </div>
-            <a href="{{ route('dashboard') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-3.5 py-2 rounded-xl flex items-center space-x-1.5 shadow-sm transition">
-                <i class="fa-solid fa-arrow-left text-[10px]"></i>
-                <span>Back to Tasks</span>
-            </a>
+            <div class="flex items-center space-x-3">
+                <a href="{{ route('courses.index') }}" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 font-semibold text-xs px-3.5 py-2 rounded-xl transition">
+                    Manage Courses
+                </a>
+                <a href="{{ route('dashboard') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-3.5 py-2 rounded-xl flex items-center space-x-1.5 shadow-sm transition">
+                    <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                    <span>Back to Tasks</span>
+                </a>
+            </div>
         </header>
 
         <div class="p-8 space-y-6">
@@ -68,60 +85,53 @@
                     $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
                 @endphp
                 @foreach($days as $day)
-                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 min-h-[550px] space-y-3">
-                    <div class="border-b border-slate-200/80 pb-2">
-                        <span class="font-bold text-xs text-slate-700 block">{{ $day }}</span>
-                        <span class="text-[10px] text-slate-400">Lecture & Deadlines</span>
-                    </div>
+                    @php
+                        // Filter matkul yang mengandung nama hari pada kolom schedule_time (misal: "Monday · 09:00 - 10:30")
+                        $dayCourses = $courses->filter(function($c) use ($day) {
+                            return str_contains($c->schedule_time ?? '', $day);
+                        });
 
-                    <!-- Filtered schedule items -->
-                    @if($day == 'Monday')
-                        <div class="bg-purple-50 border-l-4 border-purple-500 p-2.5 rounded-lg text-xs space-y-1">
-                            <span class="font-bold text-purple-900">10:00 - 11:30</span>
-                            <p class="font-semibold text-slate-800">HCI 302 Lecture</p>
-                            <p class="text-[10px] text-slate-500">Design Lab 204</p>
+                        // Filter deadline tugas yang jatuh pada hari tersebut
+                        $dayTasks = $tasks->filter(function($t) use ($day) {
+                            return $t->due_date ? date('l', strtotime($t->due_date)) === $day : false;
+                        });
+                    @endphp
+                    <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 min-h-[550px] space-y-3">
+                        <div class="border-b border-slate-200/80 pb-2">
+                            <span class="font-bold text-xs text-slate-700 block">{{ $day }}</span>
+                            <span class="text-[10px] text-slate-400">Lecture & Deadlines</span>
                         </div>
-                        <div class="bg-sky-50 border-l-4 border-sky-500 p-2.5 rounded-lg text-xs space-y-1">
-                            <span class="font-bold text-sky-900">13:00 - 14:30</span>
-                            <p class="font-semibold text-slate-800">MATH 221 Lecture</p>
-                            <p class="text-[10px] text-slate-500">Science Hall 305</p>
-                        </div>
-                    @elseif($day == 'Tuesday')
-                        <div class="bg-blue-50 border-l-4 border-blue-500 p-2.5 rounded-lg text-xs space-y-1">
-                            <span class="font-bold text-blue-900">09:00 - 10:30</span>
-                            <p class="font-semibold text-slate-800">CS 241 Lecture</p>
-                            <p class="text-[10px] text-slate-500">Engineering 112</p>
-                        </div>
-                        <div class="bg-emerald-50 border-l-4 border-emerald-500 p-2.5 rounded-lg text-xs space-y-1">
-                            <span class="font-bold text-emerald-900">14:00 - 15:30</span>
-                            <p class="font-semibold text-slate-800">BIOL 214 Lab</p>
-                            <p class="text-[10px] text-slate-500">Biology Lab 108</p>
-                        </div>
-                    @elseif($day == 'Wednesday')
-                        <div class="bg-purple-50 border-l-4 border-purple-500 p-2.5 rounded-lg text-xs space-y-1">
-                            <span class="font-bold text-purple-900">10:00 - 11:30</span>
-                            <p class="font-semibold text-slate-800">HCI 302 Workshop</p>
-                            <p class="text-[10px] text-slate-500">Design Lab 204</p>
-                        </div>
-                        <div class="bg-rose-50 border border-rose-200 p-2.5 rounded-lg text-xs space-y-1 mt-4">
-                            <span class="text-[10px] font-bold text-rose-600 uppercase">🔥 Deadline Today</span>
-                            <p class="font-bold text-slate-800">Submit HCI Research Plan</p>
-                            <span class="text-[10px] text-slate-400">17:00 WIB</span>
-                        </div>
-                    @elseif($day == 'Thursday')
-                        <div class="bg-blue-50 border-l-4 border-blue-500 p-2.5 rounded-lg text-xs space-y-1">
-                            <span class="font-bold text-blue-900">09:00 - 10:30</span>
-                            <p class="font-semibold text-slate-800">CS 241 Discussion</p>
-                            <p class="text-[10px] text-slate-500">Engineering 112</p>
-                        </div>
-                    @elseif($day == 'Friday')
-                        <div class="bg-emerald-50 border-l-4 border-emerald-500 p-2.5 rounded-lg text-xs space-y-1">
-                            <span class="font-bold text-emerald-900">14:00 - 15:30</span>
-                            <p class="font-semibold text-slate-800">BIOL 214 Seminar</p>
-                            <p class="text-[10px] text-slate-500">Biology Lab 108</p>
-                        </div>
-                    @endif
-                </div>
+
+                        <!-- Daftar Kelas / Mata Kuliah Dinamis -->
+                        @foreach($dayCourses as $course)
+                            <div class="p-2.5 rounded-xl text-xs space-y-1 border-l-4 shadow-2xs bg-white" style="border-color: {{ $course->color_hex }}">
+                                <span class="font-bold block" style="color: {{ $course->color_hex }}">
+                                    {{ trim(explode('·', $course->schedule_time)[1] ?? $course->schedule_time) }}
+                                </span>
+                                <p class="font-semibold text-slate-800">{{ $course->course_code }} {{ $course->course_name }}</p>
+                                <p class="text-[10px] text-slate-500">{{ $course->room ?? 'Online / Lab' }}</p>
+                            </div>
+                        @endforeach
+
+                        <!-- Deadline Tugas Dinamis -->
+                        @foreach($dayTasks as $task)
+                            <div class="bg-rose-50 border border-rose-200 p-2.5 rounded-xl text-xs space-y-1">
+                                <span class="text-[10px] font-bold text-rose-600 uppercase flex items-center space-x-1">
+                                    <span>🔥 Deadline</span>
+                                </span>
+                                <p class="font-bold text-slate-800">{{ $task->title }}</p>
+                                <span class="text-[10px] text-slate-500">{{ $task->due_time ?? '23:59 WIB' }}</span>
+                            </div>
+                        @endforeach
+
+                        <!-- Empty State Jika Hari Ini Kosong -->
+                        @if($dayCourses->isEmpty() && $dayTasks->isEmpty())
+                            <div class="flex flex-col items-center justify-center h-48 text-center text-slate-300">
+                                <i class="fa-regular fa-calendar-check text-xl mb-1.5 opacity-60"></i>
+                                <p class="text-xs text-slate-400">No schedule</p>
+                            </div>
+                        @endif
+                    </div>
                 @endforeach
             </div>
         </div>
